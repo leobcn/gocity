@@ -42,7 +42,7 @@ func (g *generator) GetBounds() Position {
 func (g *generator) NextPosition(width, height float64) Position {
 	g.currentIndex++
 
-	if g.currentIndex > g.dimension && g.yReference+height >= g.maxWidth {
+	if g.currentIndex > g.dimension && g.yReference+height >= g.maxHeight {
 		g.currentIndex = 0
 		g.yReference = 0
 		g.xReference = g.maxWidth + defaultMargin

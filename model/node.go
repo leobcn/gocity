@@ -59,6 +59,13 @@ func getNodeURL(node *Node, parentPath string) (raw string, formatted string) {
 	return
 }
 
+func (n *Node) SortChildList() {
+	for _, child := range n.childrenMap {
+		child.SortChildList()
+	}
+	sort.Sort(sort.Reverse(byWidth(n.Children)))
+}
+
 func (n *Node) GenerateChildList(parentPath string) {
 	for _, child := range n.childrenMap {
 		baseName, nodeURL := getNodeURL(child, parentPath)
@@ -69,8 +76,28 @@ func (n *Node) GenerateChildList(parentPath string) {
 		}
 	}
 
-	// Sort by width
-	sort.Sort(sort.Reverse(byWidth(n.Children)))
+}
+
+func (n *Node) GenerateNodesSize() {
+	if len(n.Children) == 0 {
+		n.Width = float64(n.NumberOfAttributes) + 1
+		n.Depth = float64(n.NumberOfAttributes) + 1
+		return
+	}
+
+	for _, child := range n.Children {
+		child.GenerateNodesSize()
+		n.Width += child.Width
+		n.Depth += child.Depth
+	}
+
+	if n.Type == FileType {
+		n.Width += float64(n.NumberOfAttributes)
+		n.Depth += float64(n.NumberOfAttributes)
+	}
+
+	n.Width += n.Width / float64(len(n.Children))
+	n.Depth += n.Depth / float64(len(n.Children))
 }
 
 func (n *Node) GenerateChildrenPosition() {
@@ -165,6 +192,8 @@ func New(items map[string]*analyzer.NodeInfo, repositoryName string) *Node {
 
 	// TODO: branch selector
 	tree.GenerateChildList(fmt.Sprintf("https://%s/%s/master", repositoryName, BaseTypeFlag))
+	tree.GenerateNodesSize()
+	tree.SortChildList()
 	tree.GenerateChildrenPosition()
 
 	return tree
